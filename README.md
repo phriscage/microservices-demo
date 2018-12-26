@@ -5,7 +5,7 @@ web-based e-commerce app called **“Hipster Shop”** where users can browse it
 add them to the cart, and purchase them.
 
 **Google uses this application to demonstrate use of technologies like
-Kubernetes/GKE, Istio, Stackdriver, gRPC and OpenCensus**. This application
+Kubernetes/GKE, Istio, Stackdriver, Apigee, gRPC and OpenCensus**. This application
 works on any Kubernetes cluster (such as a local one), as well as Google
 Kubernetes Engine. It’s **easy to deploy with little to no configuration**.
 
@@ -53,6 +53,7 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 - **[gRPC](https://grpc.io):** Microservices use a high volume of gRPC calls to
   communicate to each other.
 - **[Istio](https://istio.io):** Application works on Istio service mesh.
+- **[Apigee](https://apigee.com):** Application works with Apigee Istio plugin mixer.
 - **[OpenCensus](https://opencensus.io/) Tracing:** Most services are
   instrumented using OpenCensus trace interceptors for gRPC/HTTP.
 - **[Stackdriver APM](https://cloud.google.com/stackdriver/):** Many services
