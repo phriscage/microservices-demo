@@ -31,6 +31,7 @@ import (
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
@@ -39,8 +40,9 @@ import (
 )
 
 const (
-	listenPort  = "5050"
-	usdCurrency = "USD"
+	listenPort               = "5050"
+	usdCurrency              = "USD"
+	apigeeClientIDHeaderName = "x-api-key"
 )
 
 var log *logrus.Logger
@@ -91,12 +93,37 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		withServerUnaryInterceptor())
 	pb.RegisterCheckoutServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
 	err = srv.Serve(lis)
 	log.Fatal(err)
+}
+
+func withServerUnaryInterceptor() grpc.ServerOption {
+	return grpc.UnaryInterceptor(serverInterceptor)
+}
+
+// Custom Interceptor to add the authorization header to subsequent requests
+func serverInterceptor(ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler) (interface{}, error) {
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok != false {
+		if md[apigeeClientIDHeaderName] != nil {
+			var apigeeClientID = md[apigeeClientIDHeaderName][0]
+			log.Debug("apigeeClientID found in request... appending to outgoing context")
+			ctx = metadata.AppendToOutgoingContext(ctx, apigeeClientIDHeaderName, apigeeClientID)
+		}
+	}
+
+	// Calls the handler
+	h, err := handler(ctx, req)
+	return h, err
 }
 
 func initJaegerTracing() {
@@ -352,7 +379,7 @@ func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, 
 		return nil, fmt.Errorf("could not connect currency service: %+v", err)
 	}
 	defer conn.Close()
-	result, err := pb.NewCurrencyServiceClient(conn).Convert(context.TODO(), &pb.CurrencyConversionRequest{
+	result, err := pb.NewCurrencyServiceClient(conn).Convert(ctx, &pb.CurrencyConversionRequest{
 		From:   from,
 		ToCode: toCurrency})
 	if err != nil {
