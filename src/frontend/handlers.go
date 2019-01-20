@@ -385,12 +385,28 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 			MaxAge: cookieMaxAge,
 		})
 	}
+
+	alert := struct {
+		Class   string
+		Title   string
+		Message string
+	}{"alert-success", "Success!", "Apigee Client ID updated."}
+
 	referer := r.Header.Get("referer")
 	if referer == "" {
 		referer = "/"
 	}
 	w.Header().Set("Location", referer)
-	w.WriteHeader(http.StatusFound)
+
+	if err := templates.ExecuteTemplate(w, "config", map[string]interface{}{
+		"session_id":                   sessionID(r),
+		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
+		"apigee_client_id":             apigeeClientID,
+		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"alert": alert,
+	}); err != nil {
+		log.Println(err)
+	}
 }
 
 // chooseAd queries for advertisements available and randomly chooses one, if
