@@ -136,12 +136,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
-		"user_currency":   currentCurrency(r),
-		"currencies":      currencies,
-		"product":         product,
-		"recommendations": recommendations,
-		"cart_size":       len(cart),
+		"ad":                           fe.chooseAd(r.Context(), p.Categories, log),
+		"user_currency":                currentCurrency(r),
+		"currencies":                   currencies,
+		"product":                      product,
+		"recommendations":              recommendations,
+		"cart_size":                    len(cart),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -403,7 +403,21 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             apigeeClientID,
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"alert": alert,
+		"alert":                        alert,
+	}); err != nil {
+		log.Println(err)
+	}
+}
+
+// viewLoginHandler adds an endpoint for end-users to login.
+func (fe *frontendServer) viewLoginHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("Viewing the login")
+
+	if err := templates.ExecuteTemplate(w, "login", map[string]interface{}{
+		"session_id":      sessionID(r),
+		"request_id":      r.Context().Value(ctxKeyRequestID{}),
+		"firebase_config": firebaseConfig,
 	}); err != nil {
 		log.Println(err)
 	}
@@ -430,9 +444,9 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"error":       errMsg,
-		"status_code": code,
-		"status":      http.StatusText(code)})
+		"error":                        errMsg,
+		"status_code":                  code,
+		"status":                       http.StatusText(code)})
 }
 
 func currentCurrency(r *http.Request) string {

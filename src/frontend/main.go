@@ -47,6 +47,22 @@ const (
 	ApigeeClientIDPlaceholder = "Add your Apigee Application Client ID here"
 )
 
+type FirebaseConfig struct {
+	ApiKey           string
+	AuthDomain       string
+	ProjectId        string
+	SignInSuccessUrl string
+}
+
+var (
+	firebaseConfig = FirebaseConfig{
+		ApiKey:           "Add your Firebase Application key here",
+		AuthDomain:       "Add your Firebase AuthDomain here",
+		ProjectId:        "Add your Firebase Project ID here",
+		SignInSuccessUrl: "localhost" + ":" + port,
+	}
+)
+
 var (
 	whitelistedCurrencies = map[string]bool{
 		"USD": true,
@@ -130,6 +146,7 @@ func main() {
 	r.HandleFunc("/config", svc.viewConfigHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/config", svc.setConfigHandler).Methods(http.MethodPost)
 	r.HandleFunc("/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
+	r.HandleFunc("/login", svc.viewLoginHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/logout", svc.logoutHandler).Methods(http.MethodGet)
 	r.HandleFunc("/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
