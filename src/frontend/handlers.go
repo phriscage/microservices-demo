@@ -16,6 +16,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"math/rand"
@@ -359,12 +361,16 @@ func (fe *frontendServer) viewConfigHandler(w http.ResponseWriter, r *http.Reque
 	log.Debug("Viewing the configuration")
 
 	apigeeClientID := currentApigeeClientID(r)
+	firebaseConfig := currentFirebaseConfig(r)
+	log.Debug(firebaseConfig)
 
 	if err := templates.ExecuteTemplate(w, "config", map[string]interface{}{
 		"session_id":                   sessionID(r),
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             apigeeClientID,
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              firebaseConfig,
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 	}); err != nil {
 		log.Println(err)
 	}
@@ -386,11 +392,28 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
+	firebaseConfig := FirebaseConfig{
+		ApiKey:           r.FormValue("firebase_config.ApiKey"),
+		AuthDomain:       r.FormValue("firebase_config.AuthDomain"),
+		ProjectId:        r.FormValue("firebase_config.ProjectId"),
+		SignInSuccessUrl: r.FormValue("firebase_config.SignInSuccessUrl"),
+	}
+
+	log.WithField("firebase_config:", firebaseConfig).Debug("firebase_config")
+
+	data, _ := json.Marshal(&firebaseConfig)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   firebaseConfigCookieName,
+		Value:  base64.StdEncoding.EncodeToString(data),
+		MaxAge: cookieMaxAge,
+	})
+
 	alert := struct {
 		Class   string
 		Title   string
 		Message string
-	}{"alert-success", "Success!", "Apigee Client ID updated."}
+	}{"alert-success", "Success!", "Configuration updated."}
 
 	referer := r.Header.Get("referer")
 	if referer == "" {
@@ -403,6 +426,8 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             apigeeClientID,
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              firebaseConfig,
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"alert":                        alert,
 	}); err != nil {
 		log.Println(err)
@@ -415,9 +440,11 @@ func (fe *frontendServer) viewLoginHandler(w http.ResponseWriter, r *http.Reques
 	log.Debug("Viewing the login")
 
 	if err := templates.ExecuteTemplate(w, "login", map[string]interface{}{
-		"session_id":      sessionID(r),
-		"request_id":      r.Context().Value(ctxKeyRequestID{}),
-		"firebase_config": firebaseConfig,
+		"session_id":                   sessionID(r),
+		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
+		"apigee_client_id":             currentApigeeClientID(r),
+		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -463,6 +490,28 @@ func currentApigeeClientID(r *http.Request) string {
 		return c.Value
 	}
 	return ""
+}
+
+func currentFirebaseConfig(r *http.Request) FirebaseConfig {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("Getting current FirebaseConfig")
+	c, err := r.Cookie(firebaseConfigCookieName)
+	if err != nil {
+		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Cookie DNE")
+		return FirebaseConfig{}
+	}
+	decodedCookie, err := base64.StdEncoding.DecodeString(c.Value)
+	if err != nil {
+		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Cannot base64 decode Cookie")
+		return FirebaseConfig{}
+	}
+	firebaseConfig := FirebaseConfig{}
+	err = json.Unmarshal(decodedCookie, &firebaseConfig)
+	if err != nil {
+		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Not proper JSON format")
+		return FirebaseConfig{}
+	}
+	return firebaseConfig
 }
 
 func sessionID(r *http.Request) string {

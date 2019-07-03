@@ -48,14 +48,15 @@ const (
 )
 
 type FirebaseConfig struct {
-	ApiKey           string
-	AuthDomain       string
-	ProjectId        string
-	SignInSuccessUrl string
+	ApiKey           string `json:"api_key,omitempty"`
+	AuthDomain       string `json:"auth_domain,omitempty"`
+	ProjectId        string `json:"project_id,omitempty"`
+	SignInSuccessUrl string `json:"sign_in_success_url,omitempty"`
 }
 
 var (
-	firebaseConfig = FirebaseConfig{
+	firebaseConfigCookieName  = "firebase_config"
+	firebaseConfigPlaceholder = FirebaseConfig{
 		ApiKey:           "Add your Firebase Application key here",
 		AuthDomain:       "Add your Firebase AuthDomain here",
 		ProjectId:        "Add your Firebase Project ID here",

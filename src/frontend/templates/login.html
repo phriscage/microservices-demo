@@ -71,13 +71,36 @@
 
     {{ if $.firebase_config}}
       <script>
-        try {
-            let app = firebase.app();
-            let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-          } catch (e) {
-            console.error(e);
-            document.getElementById('firebaseui-auth-container').innerHTML = 'Error loading the Identity Platform SDK, check the console.';
-        };
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        console.error(user);
+                    } else {
+                        // No user is signed in.
+                    };
+                });
+            } catch (e) {
+                // console.error('firebase.auth().onAuthStateChanged: ', e);
+                var message = ' Firebase Auth ' + e + ' Try updating the <a href="/config">configuration</a>';
+                var content = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Warning!</strong> ` + message + `
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('firebaseui-auth-container').innerHTML =content;
+            };
+            try {
+                let app = firebase.app();
+                let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('firebaseui-auth-container').innerHTML = 'Error loading the Identity Platform SDK, check the console.';
+            };
+        });
       </script>
     {{ end }}
 
