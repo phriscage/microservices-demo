@@ -14,6 +14,16 @@
       <script type="text/javascript">
         // FirebaseUI config.
         var uiConfig = {
+           callbacks: {
+             // Called when the user has been successfully signed in.
+             'signInSuccessWithAuthResult': function(authResult, redirectUrl) {
+               if (authResult.user) {
+                 handleSignedInUser(authResult.user);
+               }
+               // Do not redirect.
+               return false;
+             }
+           },
           // Modify signInSuccessUrl for your GAE App Config
           signInSuccessUrl: {{ $.firebase_config.SignInSuccessUrl }},
           signInOptions: [
@@ -26,8 +36,7 @@
             firebase.auth.TwitterAuthProvider.PROVIDER_ID,
             firebase.auth.GithubAuthProvider.PROVIDER_ID,
             {
-              provider: 'microsoft.com',
-              providerName: 'Microsoft',
+              provider: 'microsoft.com', providerName: 'Microsoft',
               buttonColor: '#2F2F2F',
               iconUrl: 'https://docs.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_mssymbol_19.png',
               loginHintKey: 'login_hint'
@@ -47,6 +56,9 @@
 
         // Initialize the FirebaseUI Widget using Firebase.
         var ui = new firebaseui.auth.AuthUI(firebase.auth());
+        // Auto sign-in for returning users is enabled by default except when prompt is
+        // not 'none' in the Google provider custom parameters. To manually disable:
+        ui.disableAutoSignIn();
         // The start method will wait until the DOM is loaded.
         ui.start('#firebaseui-auth-container', uiConfig);
       </script>
@@ -56,29 +68,77 @@
         <div class="py-5">
             <div class="container bg-light py-1 px-lg-5 py-lg-1">
                 <div class="row py-1 my-2">
-                   <div class="col-12 col-lg-8 offset-lg-2">
-                      <div class="text-center">
+                    <div class="col-12 col-lg-8 offset-lg-2 text-center">
                         <h2>Hipster App Login</h2>
-                      </div>
-                      <hr/>
-                      {{ template "alert" . }}
-                      <div id="firebaseui-auth-container"></div>
-                   </div>
+                        <hr/>
+                        {{ template "alert" . }}
+                        <div id="loading" class="d-block">Loading...</div>
+                        <div id="loaded" class="d-none">
+                            <div id="user-signed-in" class="d-none">
+                                <div id="user-info">
+                                    <div id="name"><h4></h4></div>
+                                    <div id="email"></div>
+                                    <div id="phone"></div>
+                                </div>
+                            <hr/>
+                            <div class="row">
+                                <div class="col">
+                                </div>
+                                <div class="col-lg-5 mb-3">
+                                    <button id="sign-out" class="btn btn-primary btn-block" type="submit">Sign Out</button>
+                                </div>
+                                <div class="col">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="user-signed-out" class="d-none">
+                            <h4>You are signed out.</h4>
+                            <div id="firebaseui-auth-container"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+  {{ template "footer" . }}
 
     {{ if $.firebase_config}}
       <script>
+        /**
+         * Displays the UI for a signed in user.
+         * @param {!firebase.User} user
+         */
+        var handleSignedInUser = function(user) {
+            document.getElementById('user-signed-out').className = 'd-none';
+            document.getElementById('user-signed-in').className = 'd-block';
+            document.getElementById('name').textContent = 'Hi ' + user.displayName + '!';
+            document.getElementById('email').textContent = user.email;
+            document.getElementById('phone').textContent = user.phoneNumber;
+        };
+
+        /**
+         * Displays the UI for a signed out user.
+         */
+        var handleSignedOutUser = function() {
+            document.getElementById('user-signed-in').className = 'd-none';
+            document.getElementById('user-signed-out').className = 'd-block';
+        };
+
+        /**
+         * handle the log-out for a user.
+         */
+         document.getElementById('sign-out').addEventListener('click', function() {
+            console.log('signOut');
+            firebase.auth().signOut();
+            window.location.replace('/login');
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 firebase.auth().onAuthStateChanged(function(user) {
-                    if (user) {
-                        console.error(user);
-                    } else {
-                        // No user is signed in.
-                    };
+                    document.getElementById('loading').className = 'd-none';
+                    document.getElementById('loaded').className = 'd-block';
+                    user ? handleSignedInUser(user) : handleSignedOutUser();
                 });
             } catch (e) {
                 // console.error('firebase.auth().onAuthStateChanged: ', e);
@@ -104,5 +164,4 @@
       </script>
     {{ end }}
 
-  {{ template "footer" . }}
 {{ end }}
