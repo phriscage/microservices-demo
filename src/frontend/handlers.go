@@ -78,6 +78,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"currencies":                   currencies,
 		"products":                     ps,
@@ -138,6 +140,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"ad":                           fe.chooseAd(r.Context(), p.Categories, log),
 		"user_currency":                currentCurrency(r),
 		"currencies":                   currencies,
@@ -245,6 +249,8 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"currencies":                   currencies,
 		"recommendations":              recommendations,
@@ -311,6 +317,8 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"order":                        order.GetOrder(),
 		"total_paid":                   &totalPaid,
@@ -445,6 +453,7 @@ func (fe *frontendServer) viewLoginHandler(w http.ResponseWriter, r *http.Reques
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
 		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 	}); err != nil {
 		log.Println(err)
 	}
@@ -471,6 +480,8 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"error":                        errMsg,
 		"status_code":                  code,
 		"status":                       http.StatusText(code)})

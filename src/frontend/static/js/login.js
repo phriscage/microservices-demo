@@ -22,24 +22,46 @@
  * @param {!firebase.User} user
  */
 var handleSignedInUser = function(user) {
-		document.getElementById('user-signed-out').className = 'd-none';
-		document.getElementById('user-signed-in').className = 'd-block';
-		document.getElementById('name').value = 'Hi ' + user.displayName + '!';
-		document.getElementById('email').value = user.email;
-		user.getIdToken().then(function(idToken) {
+		if (document.getElementById('user-signed-in')) {
+			document.getElementById('user-signed-in').className = 'd-block';
+			document.getElementById('name').value = 'Hi ' + user.displayName + '!';
+			document.getElementById('email').value = user.email;
+			user.getIdToken().then(function(idToken) {
 				var jwtIoUrl = "'https://jwt.io/?value=" + idToken + "'";
 				var idTokenLabel = 'ID Token: | <a target="_blank" href=' + jwtIoUrl + '>jwt.io</a>';
 				document.getElementById('id-token').value = idToken;
 				document.getElementById('id-token-label').innerHTML = idTokenLabel;
-		 });
+			});
+		};
+		if (document.getElementById('user-signed-out') != null) {
+			document.getElementById('user-signed-out').className = 'd-none';
+		};
+		if (document.getElementById('user-signed-in-dropdown') != null) {
+			document.getElementById('user-signed-in-dropdown').className = 'd-block';
+			document.getElementById('dropdown-email').innerHTML = user.email;
+		};
+		if (document.getElementById('user-signed-out-dropdown') != null) {
+			document.getElementById('user-signed-out-dropdown').className = 'd-none';
+		};
 };
 
 /**
  * Displays the UI for a signed out user.
  */
 var handleSignedOutUser = function() {
-		document.getElementById('user-signed-in').className = 'd-none';
-		document.getElementById('user-signed-out').className = 'd-block';
+		// if (document.getElementById('user-signed-in') != null) {
+		if (document.getElementById('user-signed-in')) {
+			document.getElementById('user-signed-in').className = 'd-none';
+		};
+		if (document.getElementById('user-signed-out') != null) {
+			document.getElementById('user-signed-out').className = 'd-block';
+		};
+		if (document.getElementById('user-signed-in-dropdown') != null) {
+			document.getElementById('user-signed-in-dropdown').className = 'd-none';
+		};
+		if (document.getElementById('user-signed-out-dropdown') != null) {
+			document.getElementById('user-signed-out-dropdown').className = 'd-block';
+		};
 };
 
 /**
@@ -52,8 +74,6 @@ var handleSignedOutUser = function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-		document.getElementById('loading').className = 'd-none';
-		document.getElementById('loaded').className = 'd-block';
 		try {
 				firebase.auth().onAuthStateChanged(function(user) {
 						user ? handleSignedInUser(user) : handleSignedOutUser();
@@ -70,13 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
 								</button>
 						</div>
 				`;
-				document.getElementById('firebaseui-auth-container').innerHTML = content;
+				if (document.getElementById('firebaseui-auth-container')) {
+					document.getElementById('firebaseui-auth-container').innerHTML = content;
+				};
 		};
 		try {
 				let app = firebase.app();
 				let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
 		} catch (e) {
 				console.error(e);
-				document.getElementById('firebaseui-auth-container').innerHTML = 'Error loading the Identity Platform SDK, check the console.';
+				if (document.getElementById('firebaseui-auth-container')) {
+					document.getElementById('firebaseui-auth-container').innerHTML = 'Error loading the Identity Platform SDK, check the console.';
+				};
 		};
 });

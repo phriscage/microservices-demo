@@ -88,9 +88,23 @@
                     <a class="btn btn-primary btn-light ml-2" href="/cart" role="button">View Cart ({{$.cart_size}})</a>
                 </form>
                 {{ end }}
-                <a class="btn btn-primary btn-light ml-2" href="/login" role="button">Login</a>
+                <div id="user-signed-out-dropdown" class="d-none">
+                    <a class="btn btn-primary btn-light ml-2" href="/login" role="button">Login</a>
+                </div>
+                <div id="user-signed-in-dropdown" class="d-none">
+                    <div class="btn-group">
+                        <button type="button" id="dropdown-email" class="btn btn-primary btn-light ml-2"></button>
+                        <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <button id="sign-out" class="dropdown-item" type="button">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
+    <script src="static/js/login.js"></script>
 {{end}}
