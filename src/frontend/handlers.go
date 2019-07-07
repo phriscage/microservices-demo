@@ -508,7 +508,6 @@ func currentFirebaseConfig(r *http.Request) FirebaseConfig {
 	log.Debug("Getting current FirebaseConfig")
 	c, err := r.Cookie(firebaseConfigCookieName)
 	if err != nil {
-		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Cookie DNE")
 		return FirebaseConfig{}
 	}
 	decodedCookie, err := base64.StdEncoding.DecodeString(c.Value)
@@ -523,6 +522,14 @@ func currentFirebaseConfig(r *http.Request) FirebaseConfig {
 		return FirebaseConfig{}
 	}
 	return firebaseConfig
+}
+
+func currentFirebaseIDToken(r *http.Request) string {
+	c, _ := r.Cookie(firebaseIDTokenCookieName)
+	if c != nil {
+		return c.Value
+	}
+	return ""
 }
 
 func sessionID(r *http.Request) string {

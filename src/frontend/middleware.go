@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -112,6 +113,19 @@ func ensureApigeeClientID(next http.Handler) http.HandlerFunc {
 		apigeeClientID = currentApigeeClientID(r)
 		if apigeeClientID != "" {
 			ctx := metadata.AppendToOutgoingContext(r.Context(), apigeeClientIDHeaderName, apigeeClientID)
+			r = r.WithContext(ctx)
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+// update context metadata with appropriate Firebase ID Token Authorization header
+func ensureFirebaseIDToken(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		firebaseIDToken := currentFirebaseIDToken(r)
+		if firebaseIDToken != "" {
+			authHeaderValue := fmt.Sprintf("Bearer %s", firebaseIDToken)
+			ctx := metadata.AppendToOutgoingContext(r.Context(), "Authorization", authHeaderValue)
 			r = r.WithContext(ctx)
 		}
 		next.ServeHTTP(w, r)

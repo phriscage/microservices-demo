@@ -62,6 +62,7 @@ var (
 		ProjectId:        "Add your Firebase Project ID here",
 		SignInSuccessUrl: "localhost" + ":" + port,
 	}
+	firebaseIDTokenCookieName = "firebase_id-token"
 )
 
 var (
@@ -158,6 +159,7 @@ func main() {
 	handler = &logHandler{log: log, next: handler} // add logging
 	handler = ensureSessionID(handler)             // add session ID
 	handler = ensureApigeeClientID(handler)        // add apigee client ID
+	handler = ensureFirebaseIDToken(handler)       // add Firebase ID Token
 	handler = &ochttp.Handler{                     // add opencensus instrumentation
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{}}
