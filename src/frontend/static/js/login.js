@@ -42,6 +42,7 @@ var handleSignedInUser = function(user) {
 			document.getElementById('user-signed-in-menu').className = 'd-block';
 			// document.getElementById('user-profile-menu').innerHTML = '<a href="/login">' + user.email + '</a>';
 			document.getElementById('user-profile-menu').innerHTML = user.email;
+			document.getElementById('user-profile-image').src = user.photoURL;
 		};
 		if (document.getElementById('user-signed-out-menu') != null) {
 			document.getElementById('user-signed-out-menu').className = 'd-none';
