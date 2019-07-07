@@ -42,7 +42,10 @@
                 // Leave the lines as is for the providers you want to offer your users.
                 {
                   provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-                  authMethod: 'https://accounts.google.com'
+                  authMethod: 'https://accounts.google.com',
+                  customParameters: {
+                     prompt: 'select_account'
+                  }
                 },
                 firebase.auth.FacebookAuthProvider.PROVIDER_ID,
                 firebase.auth.TwitterAuthProvider.PROVIDER_ID,
@@ -88,12 +91,12 @@
                     <a class="btn btn-primary btn-light ml-2" href="/cart" role="button">View Cart ({{$.cart_size}})</a>
                 </form>
                 {{ end }}
-                <div id="user-signed-out-dropdown" class="d-none">
+                <div id="user-signed-out-menu" class="d-none">
                     <a class="btn btn-primary btn-light ml-2" href="/login" role="button">Login</a>
                 </div>
-                <div id="user-signed-in-dropdown" class="d-none">
+                <div id="user-signed-in-menu" class="d-none">
                     <div class="btn-group">
-                        <button type="button" id="dropdown-email" class="btn btn-primary btn-light ml-2"></button>
+                        <button type="button" id="user-profile-menu" class="btn btn-primary btn-light ml-2"></button>
                         <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="sr-only">Toggle Dropdown</span>
                         </button>
@@ -102,6 +105,11 @@
                         </div>
                     </div>
                 </div>
+                <style>
+                    a, a:visited, a:hover, a:active {
+                        color: inherit;
+                    }
+                </style>
             </div>
         </div>
     </header>
