@@ -41,8 +41,9 @@ var handleSignedInUser = function(user) {
 		if (document.getElementById('user-signed-in-menu') != null) {
 			document.getElementById('user-signed-in-menu').className = 'd-block';
 			// document.getElementById('user-profile-menu').innerHTML = '<a href="/login">' + user.email + '</a>';
-			document.getElementById('user-profile-menu').innerHTML = user.email;
-			document.getElementById('user-profile-image').src = user.photoURL;
+			document.getElementById('user-signed-in-menu-image').src = user.photoURL;
+			var displayNameEmail = user.displayName + '<pre>' + user.email + '</pre>';
+			document.getElementById('user-signed-in-menu-name').innerHTML = displayNameEmail;
 		};
 		if (document.getElementById('user-signed-out-menu') != null) {
 			document.getElementById('user-signed-out-menu').className = 'd-none';
@@ -71,7 +72,7 @@ var handleSignedOutUser = function() {
 /**
  * handle the log-out for a user.
  */
- document.getElementById('sign-out').addEventListener('click', function() {
+document.getElementById('sign-out').addEventListener('click', function() {
 		console.log('signOut');
 		firebase.auth().signOut();
 		window.location.replace('/login');
@@ -80,9 +81,9 @@ var handleSignedOutUser = function() {
 /**
  * handle the user profile menu button click
  */
- document.getElementById('user-profile-menu').addEventListener('click', function() {
-		window.location.replace('/login');
-});
+// document.getElementById('user-signed-in-menu-image').addEventListener('click', function() {
+		// window.location.replace('/login');
+// });
 
 document.addEventListener('DOMContentLoaded', function() {
 		try {
