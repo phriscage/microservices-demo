@@ -47,6 +47,24 @@ const (
 	ApigeeClientIDPlaceholder = "Add your Apigee Application Client ID here"
 )
 
+type FirebaseConfig struct {
+	ApiKey           string `json:"api_key,omitempty"`
+	AuthDomain       string `json:"auth_domain,omitempty"`
+	ProjectId        string `json:"project_id,omitempty"`
+	SignInSuccessUrl string `json:"sign_in_success_url,omitempty"`
+}
+
+var (
+	firebaseConfigCookieName  = "firebase_config"
+	firebaseConfigPlaceholder = FirebaseConfig{
+		ApiKey:           "Add your Firebase Application key here",
+		AuthDomain:       "Add your Firebase AuthDomain here",
+		ProjectId:        "Add your Firebase Project ID here",
+		SignInSuccessUrl: "localhost" + ":" + port,
+	}
+	firebaseIDTokenCookieName = "firebase_id-token"
+)
+
 var (
 	whitelistedCurrencies = map[string]bool{
 		"USD": true,
@@ -130,6 +148,7 @@ func main() {
 	r.HandleFunc("/config", svc.viewConfigHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/config", svc.setConfigHandler).Methods(http.MethodPost)
 	r.HandleFunc("/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
+	r.HandleFunc("/login", svc.viewLoginHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/logout", svc.logoutHandler).Methods(http.MethodGet)
 	r.HandleFunc("/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
@@ -140,6 +159,7 @@ func main() {
 	handler = &logHandler{log: log, next: handler} // add logging
 	handler = ensureSessionID(handler)             // add session ID
 	handler = ensureApigeeClientID(handler)        // add apigee client ID
+	handler = ensureFirebaseIDToken(handler)       // add Firebase ID Token
 	handler = &ochttp.Handler{                     // add opencensus instrumentation
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{}}

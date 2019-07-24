@@ -3,29 +3,55 @@
 
     <main role="main">
         <div class="py-5">
-            <div class="container bg-light py-3 px-lg-5 py-lg-5">
-                <div class="row py-3 my-2">
-                    <div class="col-12 col-lg-8 offset-lg-2">
+            <div class="container bg-light py-1 px-lg-5 py-lg-1">
+                <div class="row py-1 my-2">
+                   <div class="col-12 col-lg-8 offset-lg-2">
+                      <div class="text-center">
                         <h2>Hipster App Configuration</h2>
-                        <hr/>
-                        {{ template "alert" . }}
-                        <form action="/config" method="POST">
-                            <div class="form-row">
-                                <div class="col-lg-3 mb-3 text-center">Apigee Client ID:</div>
-                                <div class="col-lg-8 mb-3">
-                                    <input type="text" class="form-control" id="apigee_client_id" name="apigee_client_id" value="{{ .apigee_client_id }}" placeholder="{{ .apigee_client_id_placeholder }}">
-                                </div>
-                            </div>
-                            <hr/>
-                            <div class="form-row">
-                                <div class="col">
-                                </div>
-                                <div class="col-lg-5 mb-3">
-                                	<button class="btn btn-primary btn-block" type="submit">Save</button>
-                              	</div>
-                                <div class="col">
-                                </div>
-                            </div>
+                      </div>
+                      <hr/>
+                      {{ template "alert" . }}
+                      <form action="/config" method="POST">
+                          <div class="form-row">
+                              <div class="col-lg-3 mb-3 text-center">Apigee Client ID:</div>
+                              <div class="col-lg-8 mb-3">
+                                  <input type="text" class="form-control" id="apigee_client_id" name="apigee_client_id" value="{{ .apigee_client_id }}" placeholder="{{ .apigee_client_id_placeholder }}">
+                              </div>
+                          </div>
+                          <div class="form-row">
+                              <div class="col-lg-3 mb-3 text-center">Firebase API Key:</div>
+                              <div class="col-lg-8 mb-3">
+                                  <input type="text" class="form-control" id="firebase_config.ApiKey" name="firebase_config.ApiKey" value="{{ .firebase_config.ApiKey }}" placeholder="{{ .firebase_config_placeholder.ApiKey }}">
+                              </div>
+                          </div>
+                          <div class="form-row">
+                              <div class="col-lg-3 mb-3 text-center">Firebase Auth Domain:</div>
+                              <div class="col-lg-8 mb-3">
+                                  <input type="text" class="form-control" id="firebase_config.AuthDomain" name="firebase_config.AuthDomain" value="{{ .firebase_config.AuthDomain }}" placeholder="{{ .firebase_config_placeholder.AuthDomain }}">
+                              </div>
+                          </div>
+                          <div class="form-row">
+                              <div class="col-lg-3 mb-3 text-center">Firebase Poject ID:</div>
+                              <div class="col-lg-8 mb-3">
+                                  <input type="text" class="form-control" id="firebase_config.ProjectId" name="firebase_config.ProjectId" value="{{ .firebase_config.ProjectId }}" placeholder="{{ .firebase_config_placeholder.ProjectId }}">
+                              </div>
+                          </div>
+                          <div class="form-row">
+                              <div class="col-lg-3 mb-3 text-center">Firebase SignIn Success URL:</div>
+                              <div class="col-lg-8 mb-3">
+                                  <input type="text" class="form-control" id="firebase_config.SignInSuccessUrl" name="firebase_config.SignInSuccessUrl" value="{{ .firebase_config.SignInSuccessUrl }}" placeholder="{{ .firebase_config_placeholder.SignInSuccessUrl }}">
+                              </div>
+                          </div>
+                          <hr/>
+                          <div class="form-row">
+                              <div class="col">
+                              </div>
+                              <div class="col-lg-5 mb-3">
+                              	<button class="btn btn-primary btn-block" type="submit">Save</button>
+                           	  </div>
+                              <div class="col">
+                              </div>
+                           </div>
                         </form>
                     </div>
                 </div>

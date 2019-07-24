@@ -7,6 +7,75 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Hipster Shop</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-app.js"></script>
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-auth.js"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/4.0.0/firebaseui.js" crossorigin="anonymous"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.0.0/firebaseui.css" />
+    <style>
+        #user-signed-in-menu a, a:visited, a:hover, a:active {
+            color: inherit;
+        }
+    </style>
+    {{ if $.firebase_config}}
+        <script type="text/javascript">
+            // Initialize Identity Platform Configuration
+            var config = {
+              apiKey: {{ $.firebase_config.ApiKey }},
+              authDomain: {{ $.firebase_config.AuthDomain }},
+              projectId: {{ $.firebase_config.ProjectId }}
+            };
+            firebase.initializeApp(config);
+        </script>
+        <script type="text/javascript">
+            // FirebaseUI config.
+            var uiConfig = {
+               callbacks: {
+                 // Called when the user has been successfully signed in.
+                 'signInSuccessWithAuthResult': function(authResult, redirectUrl) {
+                   if (authResult.user) {
+                     handleSignedInUser(authResult.user);
+                   }
+                   // Do not redirect.
+                   return false;
+                 }
+               },
+              // Modify signInSuccessUrl for your GAE App Config
+              signInSuccessUrl: {{ $.firebase_config.SignInSuccessUrl }},
+              signInOptions: [
+                // Leave the lines as is for the providers you want to offer your users.
+                {
+                  provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                  authMethod: 'https://accounts.google.com',
+                  customParameters: {
+                     prompt: 'select_account'
+                  }
+                },
+                firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+                firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+                firebase.auth.GithubAuthProvider.PROVIDER_ID,
+                {
+                  provider: 'microsoft.com', providerName: 'Microsoft',
+                  buttonColor: '#2F2F2F',
+                  iconUrl: 'https://docs.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_mssymbol_19.png',
+                  loginHintKey: 'login_hint'
+                },
+                firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+              ],
+              credentialHelper: firebaseui.auth.CredentialHelper.NONE,
+              // tosUrl and privacyPolicyUrl accept either url string or a callback
+              // function.
+              // Terms of service url/callback.
+              tosUrl: 'https://www.google.com',
+              // Privacy policy url/callback.
+              privacyPolicyUrl: function() {
+                window.location.assign('https://www.google.com');
+              }
+            };
+        </script>
+    </script>
+    {{ end }}
 </head>
 <body>
 
@@ -27,9 +96,25 @@
                     <a class="btn btn-primary btn-light ml-2" href="/cart" role="button">View Cart ({{$.cart_size}})</a>
                 </form>
                 {{ end }}
+                <div id="user-signed-out-menu" class="d-none">
+                    <a class="btn btn-primary btn-light ml-2" href="/login" role="button">Login</a>
+                </div>
+                <div id="user-signed-in-menu" class="d-none">
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-light ml-2" type="button" id="user-signed-in-menu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img id="user-signed-in-menu-image" src="" width="24" height="24" class="rounded-circle">
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right text-center">
+                            <div id="user-signed-in-menu-name" class="dropdown-item"></div>
+                            <a class="dropdown-item" href="/login">Profile</a>
+                            <div class="dropdown-divider"></div>
+                            <button id="sign-out" class="dropdown-item" type="button">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-
+    <script src="/static/js/login.js"></script>
 {{end}}

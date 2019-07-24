@@ -43,6 +43,7 @@ const (
 	listenPort               = "5050"
 	usdCurrency              = "USD"
 	apigeeClientIDHeaderName = "x-api-key"
+	authorizationHeaderName  = "authorization"
 )
 
 var log *logrus.Logger
@@ -118,6 +119,11 @@ func serverInterceptor(ctx context.Context,
 			var apigeeClientID = md[apigeeClientIDHeaderName][0]
 			log.Debug("apigeeClientID found in request... appending to outgoing context")
 			ctx = metadata.AppendToOutgoingContext(ctx, apigeeClientIDHeaderName, apigeeClientID)
+		}
+		if md[authorizationHeaderName] != nil {
+			var authorizationHeaderValue = md[authorizationHeaderName][0]
+			log.Debug("authorizationHeaderValue found in request... appending to outgoing context")
+			ctx = metadata.AppendToOutgoingContext(ctx, authorizationHeaderName, authorizationHeaderValue)
 		}
 	}
 

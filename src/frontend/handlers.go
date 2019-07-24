@@ -16,6 +16,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"math/rand"
@@ -76,6 +78,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"currencies":                   currencies,
 		"products":                     ps,
@@ -136,12 +140,14 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
-		"user_currency":   currentCurrency(r),
-		"currencies":      currencies,
-		"product":         product,
-		"recommendations": recommendations,
-		"cart_size":       len(cart),
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
+		"ad":                           fe.chooseAd(r.Context(), p.Categories, log),
+		"user_currency":                currentCurrency(r),
+		"currencies":                   currencies,
+		"product":                      product,
+		"recommendations":              recommendations,
+		"cart_size":                    len(cart),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -243,6 +249,8 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"currencies":                   currencies,
 		"recommendations":              recommendations,
@@ -309,6 +317,8 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 		"user_currency":                currentCurrency(r),
 		"order":                        order.GetOrder(),
 		"total_paid":                   &totalPaid,
@@ -359,12 +369,16 @@ func (fe *frontendServer) viewConfigHandler(w http.ResponseWriter, r *http.Reque
 	log.Debug("Viewing the configuration")
 
 	apigeeClientID := currentApigeeClientID(r)
+	firebaseConfig := currentFirebaseConfig(r)
+	log.Debug(firebaseConfig)
 
 	if err := templates.ExecuteTemplate(w, "config", map[string]interface{}{
 		"session_id":                   sessionID(r),
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             apigeeClientID,
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              firebaseConfig,
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 	}); err != nil {
 		log.Println(err)
 	}
@@ -386,11 +400,28 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
+	firebaseConfig := FirebaseConfig{
+		ApiKey:           r.FormValue("firebase_config.ApiKey"),
+		AuthDomain:       r.FormValue("firebase_config.AuthDomain"),
+		ProjectId:        r.FormValue("firebase_config.ProjectId"),
+		SignInSuccessUrl: r.FormValue("firebase_config.SignInSuccessUrl"),
+	}
+
+	log.WithField("firebase_config:", firebaseConfig).Debug("firebase_config")
+
+	data, _ := json.Marshal(&firebaseConfig)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   firebaseConfigCookieName,
+		Value:  base64.StdEncoding.EncodeToString(data),
+		MaxAge: cookieMaxAge,
+	})
+
 	alert := struct {
 		Class   string
 		Title   string
 		Message string
-	}{"alert-success", "Success!", "Apigee Client ID updated."}
+	}{"alert-success", "Success!", "Configuration updated."}
 
 	referer := r.Header.Get("referer")
 	if referer == "" {
@@ -403,7 +434,26 @@ func (fe *frontendServer) setConfigHandler(w http.ResponseWriter, r *http.Reques
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             apigeeClientID,
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"alert": alert,
+		"firebase_config":              firebaseConfig,
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
+		"alert":                        alert,
+	}); err != nil {
+		log.Println(err)
+	}
+}
+
+// viewLoginHandler adds an endpoint for end-users to login.
+func (fe *frontendServer) viewLoginHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("Viewing the login")
+
+	if err := templates.ExecuteTemplate(w, "login", map[string]interface{}{
+		"session_id":                   sessionID(r),
+		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
+		"apigee_client_id":             currentApigeeClientID(r),
+		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
 	}); err != nil {
 		log.Println(err)
 	}
@@ -430,9 +480,11 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 		"request_id":                   r.Context().Value(ctxKeyRequestID{}),
 		"apigee_client_id":             currentApigeeClientID(r),
 		"apigee_client_id_placeholder": ApigeeClientIDPlaceholder,
-		"error":       errMsg,
-		"status_code": code,
-		"status":      http.StatusText(code)})
+		"firebase_config":              currentFirebaseConfig(r),
+		"firebase_config_placeholder":  firebaseConfigPlaceholder,
+		"error":                        errMsg,
+		"status_code":                  code,
+		"status":                       http.StatusText(code)})
 }
 
 func currentCurrency(r *http.Request) string {
@@ -445,6 +497,35 @@ func currentCurrency(r *http.Request) string {
 
 func currentApigeeClientID(r *http.Request) string {
 	c, _ := r.Cookie(apigeeClientIDHeaderName)
+	if c != nil {
+		return c.Value
+	}
+	return ""
+}
+
+func currentFirebaseConfig(r *http.Request) FirebaseConfig {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("Getting current FirebaseConfig")
+	c, err := r.Cookie(firebaseConfigCookieName)
+	if err != nil {
+		return FirebaseConfig{}
+	}
+	decodedCookie, err := base64.StdEncoding.DecodeString(c.Value)
+	if err != nil {
+		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Cannot base64 decode Cookie")
+		return FirebaseConfig{}
+	}
+	firebaseConfig := FirebaseConfig{}
+	err = json.Unmarshal(decodedCookie, &firebaseConfig)
+	if err != nil {
+		log.WithField("firebaseConfigCookieName", firebaseConfigCookieName).WithField("error", err).Warn("Not proper JSON format")
+		return FirebaseConfig{}
+	}
+	return firebaseConfig
+}
+
+func currentFirebaseIDToken(r *http.Request) string {
+	c, _ := r.Cookie(firebaseIDTokenCookieName)
 	if c != nil {
 		return c.Value
 	}
